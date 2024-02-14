@@ -1,0 +1,10 @@
+{
+    "scripts": {
+        "prettier": "npx prettier app --check",
+        "prettier:fix": "npm run prettier -- --write"
+    },
+    "dependencies": {
+        "prettier": "^3.1.1",
+        "react-json-view-compare": "^2.0.2"
+    }
+}
