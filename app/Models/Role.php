@@ -23,10 +23,10 @@ class Role extends Model
     {
         return $this->hasMany(SecRolePermission::class, 'role_id');
     }
-public function users() {
+    public function users() {
 
-   return $this->belongsToMany(User::class,'users_roles');
+     return $this->belongsToMany(User::class,'sec_user_access_tbls','fk_user_id','fk_role_id');
 
-}
+    }
 
 }
