@@ -3,6 +3,7 @@
 
 namespace App\Http\Helpers;
 
+use Exception;
 use FFMpeg\FFMpeg;
 use FFMpeg\Format\Video\X264;
 use getID3;
@@ -44,7 +45,7 @@ class FileHelper
             $file_name = time() . '-' . $filenamewithextension;
 
             $fileContent = file_get_contents($file->getPathname());
-            $cloudPath = 'images/'.$destination . '/' . $file_name;
+            $cloudPath = 'images/test'.$destination . '/' . $file_name;
 
             $isSucceed = self::uploadFileContent($bucket, $fileContent, $cloudPath);
 
