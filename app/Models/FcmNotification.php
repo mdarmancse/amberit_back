@@ -9,7 +9,7 @@ class FcmNotification extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['notification_title', 'notification_text', 'thumbnail', 'resource_url', 'content_id', 'user_id'];
+    protected $fillable = ['notification_title', 'notification_text', 'thumbnail', 'resource_url', 'content_id', 'user_id','fcm_success_message_id'];
 
 
     public function user(){

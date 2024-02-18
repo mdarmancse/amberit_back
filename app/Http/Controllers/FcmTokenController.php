@@ -78,7 +78,7 @@ class FcmTokenController extends Controller
 
             $pushResponse=  PushNotification::Send($lastId,$title, $notificationtext, $share_url, $thumbnailWithBaseURL);
             $pushResponseDecoded = json_decode($pushResponse);
-            //return $pushResponseDecoded->message_id;
+         //   return $pushResponseDecoded->message_id;
             if ($pushResponseDecoded->message_id) {
                 $notification = FcmNotification::create([
                     'id' => $newId,
