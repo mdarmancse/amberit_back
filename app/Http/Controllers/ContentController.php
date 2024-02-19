@@ -173,6 +173,7 @@ class ContentController extends Controller
                 'id',
                 'content_name',
                 'category_name',
+                'content_file_name',
                 'transcoding_start_time',
                 'transcoding_end_time',
                 'is_approved',

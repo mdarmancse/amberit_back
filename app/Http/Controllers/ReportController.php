@@ -36,124 +36,127 @@ class ReportController extends Controller
 
     public function contentViewsDateWise(Request $request)
     {
+
+
+
         try {
             $reportContent = [];
-            $today=date('Y-m-d');
+            $today = date('Y-m-d');
             $start_date = $request->start_date ?? $today;
             $end_date = $request->end_date ?? $today;
             $type = $request->type ?? 1;
 
-            $content_query='';
-            if ($type == 2){
-                $content_query='AND content_type="LIVE"';
-            }elseif ($type == 3){
-                $content_query='AND content_type="VOD"';
-            }else{
-                $content_query='';
+            $content_query = '';
+            if ($type == 2) {
+                $content_query = 'AND content_type="LIVE"';
+            } elseif ($type == 3) {
+                $content_query = 'AND content_type="VOD"';
+            } else {
+                $content_query = '';
             }
 
-                $query = "SELECT
+            $query = "SELECT
+            CONTENT_ID,
+            content_type,
+            COUNT(DISTINCT subscriber_id) AS USERS,
+            ROUND(SUM(TOTAL_TIME_SPENT)/60/60,2) AS TIME_SPENT_HOURLY,
+            SUM(TOTAL_VIEWS) AS VIEWS
+            FROM (
+                SELECT
                 CONTENT_ID,
+                subscriber_id,
                 content_type,
-                COUNT(DISTINCT subscriber_id) AS USERS,
-                ROUND(SUM(TOTAL_TIME_SPENT)/60/60,2) AS TIME_SPENT_HOURLY,
-                SUM(TOTAL_VIEWS) AS VIEWS
+                TOTAL_TIME_SPENT,
+                TOTAL_VIEWS,
+                DD,
+                EE
                 FROM (
                     SELECT
                     CONTENT_ID,
                     subscriber_id,
                     content_type,
-                    TOTAL_TIME_SPENT,
-                    TOTAL_VIEWS,
-                    DD,
-                    EE
-                    FROM (
-                        SELECT
-                        CONTENT_ID,
-                        subscriber_id,
-                        content_type,
-                        0 AS TOTAL_TIME_SPENT,
-                        1 TOTAL_VIEWS,
-                        0 AS DD,
-                        1 AS EE
-                        FROM
-                        `t-sports-361206.events.current_viewers`
-                        WHERE
-                        FORMAT_DATE('%Y-%m-%d',partitioned_at) BETWEEN '" . Carbon::parse($start_date)->format('Y-m-d') . "'
-                            AND '" . Carbon::parse($end_date)->format('Y-m-d') . "'
-                        AND content_id !=0  $content_query
-                        UNION ALL
-                        SELECT
-                        CONTENT_ID,
-                        subscriber_id,
-                        content_type,
-                        30 AS TOTAL_TIME_SPENT,
-                        0 TOTAL_VIEWS,
-                        1 AS DD,
-                        0 AS EE
-                        FROM
-                        `t-sports-361206.events.heart_beat`
-                        WHERE
-                        FORMAT_DATE('%Y-%m-%d',partitioned_at) BETWEEN '" . Carbon::parse($start_date)->format('Y-m-d') . "'
-                            AND '" . Carbon::parse($end_date)->format('Y-m-d') . "'
-                        AND content_id !=0  $content_query ) )
-                    GROUP BY
+                    0 AS TOTAL_TIME_SPENT,
+                    1 TOTAL_VIEWS,
+                    0 AS DD,
+                    1 AS EE
+                    FROM
+                    `t-sports-361206.events.current_viewers`
+                    WHERE
+                    FORMAT_DATE('%Y-%m-%d',partitioned_at) BETWEEN '" . Carbon::parse($start_date)->format('Y-m-d') . "'
+                        AND '" . Carbon::parse($end_date)->format('Y-m-d') . "'
+                    AND content_id !=0  $content_query
+                    UNION ALL
+                    SELECT
                     CONTENT_ID,
-                    content_type
-                    ORDER BY
-                    USERS DESC";
+                    subscriber_id,
+                    content_type,
+                    30 AS TOTAL_TIME_SPENT,
+                    0 TOTAL_VIEWS,
+                    1 AS DD,
+                    0 AS EE
+                    FROM
+                    `t-sports-361206.events.heart_beat`
+                    WHERE
+                    FORMAT_DATE('%Y-%m-%d',partitioned_at) BETWEEN '" . Carbon::parse($start_date)->format('Y-m-d') . "'
+                        AND '" . Carbon::parse($end_date)->format('Y-m-d') . "'
+                    AND content_id !=0  $content_query ) )
+                GROUP BY
+                CONTENT_ID,
+                content_type
+                ORDER BY
+                USERS DESC";
 
-            //return $query;
+            $jobConfig = $this->bigQuery->query($query);
+            $Results = $this->bigQuery->startQuery($jobConfig);
+            $contents = $Results->queryResults();
 
-                $jobConfig = $this->bigQuery->query($query);
-                $Results = $this->bigQuery->startQuery($jobConfig);
-                $contents = $Results->queryResults();
+            $toptendata = Content::select('id', 'feature_banner as thumb', 'content_name as title')->get();
 
-                $toptendata = Content::select('id', 'feature_banner as thumb', 'content_name as title')->get();
+            $i = 1;
 
-                $i = 1;
-
-                foreach ($contents as $row) {
-                    foreach ($row as $column => $value) {
-                        $reportContent[$i][$column] = json_encode($value);
-                        if ($column == 'CONTENT_ID') {
-                            $new_array = $this->filter_array($toptendata, json_encode($value));
-                            if (count($new_array) > 0) {
-                                $reportContent[$i]['thumb'] = $new_array[0]->thumb;
-                                $reportContent[$i]['title'] = $new_array[0]->title;
-                                $reportContent[$i]['id'] = $new_array[0]->id;
-                            } else {
-                                $reportContent[$i]['id'] = json_encode($value);
-                            }
-                            $reportContent[$i]['sl'] = $i;
-
+            foreach ($contents as $row) {
+                foreach ($row as $column => $value) {
+                    $reportContent[$i][$column] = json_encode($value);
+                    if ($column == 'CONTENT_ID') {
+                        $new_array = $this->filter_array($toptendata, json_encode($value));
+                        if (count($new_array) > 0) {
+                            $reportContent[$i]['thumb'] = $new_array[0]->thumb;
+                            $reportContent[$i]['title'] = $new_array[0]->title;
+                            $reportContent[$i]['id'] = $new_array[0]->id;
+                        } else {
+                            $reportContent[$i]['id'] = json_encode($value);
                         }
+                        $reportContent[$i]['sl'] = $i;
                     }
-                    ++$i;
                 }
+                ++$i;
+            }
 
-                // Paginate the data
-                $perPage = $request->get('pageSize', 10);
-                $page = $request->get('pageIndex', 1);
-                $total = count($reportContent);
+            // Paginate the data
+            $perPage = $request->get('pageSize', 10);
+            $page = $request->get('pageIndex', 1);
+            $total = count($reportContent);
 
-                $paginator = new LengthAwarePaginator(
-                    array_slice($reportContent, ($page - 1) * $perPage, $perPage),
-                    $total,
-                    $perPage,
-                    $page
-                );
+            // Reset the page index to 1 when type changes
+            if ($request->type != 1) {
+                $page = 1;
+            }
 
-                $totalCount = $total;
+            $paginator = new LengthAwarePaginator(
+                array_slice($reportContent, ($page - 1) * $perPage, $perPage),
+                $total,
+                $perPage,
+                $page
+            );
 
+            $totalCount = $total;
 
-                return ApiResponse::success($paginator, $totalCount, 'Resource fetched successfully.');
-
-
+            return ApiResponse::success($paginator, $totalCount, 'Resource fetched successfully.');
         } catch (\Throwable $e) {
             return ApiResponse::error(500,  $e->getMessage(),'Something went wrong!');
-            }
+        }
     }
+
 
 
     public function getLoginLogViewReport(Request $request)

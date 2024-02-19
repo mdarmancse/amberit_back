@@ -12,7 +12,16 @@ class PushNotification
 
         $FCMApiKey = config('services.FCMApi.key');
         $FCMApiUrl = config('services.FCMApi.url');
-        $topic = "/topics/test_fcm";
+
+        $topic='';
+        if (env('APP_ENV') === 'local'){
+            $topic = "/topics/test_fcm";
+        }
+        if (env('APP_ENV') === 'production'){
+            $topic = "/topics/general_channel";
+        }
+
+
 
         $curl = curl_init();
 
