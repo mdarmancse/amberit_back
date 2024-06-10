@@ -723,6 +723,7 @@ class ComposerStaticInit791b67e4434169f37b78bd1f02a4fd59
         'App\\Http\\Controllers\\UserController' => __DIR__ . '/../..' . '/app/Http/Controllers/UserController.php',
         'App\\Http\\Helpers\\ApiResponse' => __DIR__ . '/../..' . '/app/Http/Helpers/ApiResponse.php',
         'App\\Http\\Helpers\\FileHelper' => __DIR__ . '/../..' . '/app/Http/Helpers/FileHelper.php',
+        'App\\Http\\Helpers\\Logger' => __DIR__ . '/../..' . '/app/Http/Helpers/Logger.php',
         'App\\Http\\Helpers\\PushNotification' => __DIR__ . '/../..' . '/app/Http/Helpers/PushNotification.php',
         'App\\Http\\Kernel' => __DIR__ . '/../..' . '/app/Http/Kernel.php',
         'App\\Http\\Middleware\\Authenticate' => __DIR__ . '/../..' . '/app/Http/Middleware/Authenticate.php',

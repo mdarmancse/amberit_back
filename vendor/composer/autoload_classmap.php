@@ -50,6 +50,7 @@ return array(
     'App\\Http\\Controllers\\UserController' => $baseDir . '/app/Http/Controllers/UserController.php',
     'App\\Http\\Helpers\\ApiResponse' => $baseDir . '/app/Http/Helpers/ApiResponse.php',
     'App\\Http\\Helpers\\FileHelper' => $baseDir . '/app/Http/Helpers/FileHelper.php',
+    'App\\Http\\Helpers\\Logger' => $baseDir . '/app/Http/Helpers/Logger.php',
     'App\\Http\\Helpers\\PushNotification' => $baseDir . '/app/Http/Helpers/PushNotification.php',
     'App\\Http\\Kernel' => $baseDir . '/app/Http/Kernel.php',
     'App\\Http\\Middleware\\Authenticate' => $baseDir . '/app/Http/Middleware/Authenticate.php',

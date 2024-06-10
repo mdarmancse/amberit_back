@@ -17,6 +17,7 @@ class SubCategoryController extends Controller
                 'category_sub.id',
                 'category_sub.category_id',
                 'category_sub.sub_category_name',
+                'category_sub.stb_thumbnail',
                 'category_sub.sort_order',
                 'category_sub.is_active',
                 'category_sub.created_at',
@@ -24,7 +25,6 @@ class SubCategoryController extends Controller
                 'category.category_name',
             ])
                 ->leftJoin('category', 'category_sub.category_id', '=', 'category.id')
-               // ->where(['category_sub.is_active' => 1])
                 ->orderBy('category_sub.sort_order', 'DESC');
 
             if ($request->has('pageIndex') && $request->has('pageSize')) {
@@ -54,8 +54,9 @@ class SubCategoryController extends Controller
             $subCategory = SubCategory::create([
                 'category_id' => $request->category_id,
                 'sub_category_name' => $request->sub_category_name,
+                'stb_thumbnail' => $request->stb_thumbnail,
                 'sort_order' => $request->sort_order,
-                'is_active' => $request->is_active,
+                'is_active' => $request->is_active??0,
             ]);
 
             if ($subCategory){
@@ -71,17 +72,19 @@ class SubCategoryController extends Controller
     public function show(Request $request)
     {
         try {
+
             $id = $request->id;
             $subCategory=SubCategory::select([
                 'category_sub.id',
                 'category_sub.category_id',
                 'category_sub.sub_category_name',
+                'category_sub.stb_thumbnail',
                 'category_sub.sort_order',
                 'category_sub.is_active',
                 'category.category_name',
             ])
                 ->leftJoin('category', 'category_sub.category_id', '=', 'category.id')
-          //      ->where(['category_sub.is_active' => 1,'category_sub.id'=>$id])
+                ->where(['category_sub.id'=>$id])
                 ->orderBy('category_sub.id', 'DESC')->first();
             $categories=Category::select('id as value','category_name as label')->where(['is_active'=>1])->get();
 
@@ -92,6 +95,7 @@ class SubCategoryController extends Controller
                 'sort_order'=>$subCategory->sort_order,
                 'is_active'=>$subCategory->is_active,
                 'category_name'=>$subCategory->category_name,
+                'stb_thumbnail'=>$subCategory->stb_thumbnail,
                 'categories'=>$categories,
             ];
             if ($subCategory) {
@@ -111,8 +115,6 @@ class SubCategoryController extends Controller
             $request->validate([
                 'category_id' => 'required|exists:category,id',
                 'sub_category_name' => 'required|string|max:255',
-                'sort_order' => 'required|integer',
-                'is_active' => 'required|boolean',
             ]);
             $id = $request->id;
             $subCategory = SubCategory::find($id);
@@ -121,6 +123,7 @@ class SubCategoryController extends Controller
                 $subCategory->update([
                     'category_id' => $request->category_id,
                     'sub_category_name' => $request->sub_category_name,
+                    'stb_thumbnail' => $request->stb_thumbnail,
                     'sort_order' => $request->sort_order,
                     'is_active' => $request->is_active,
                 ]);

@@ -37,7 +37,7 @@ class CategoryController extends Controller
                 'is_active',
                 'created_at',
                 'updated_at',
-            ])->where(['is_active' => 1])->orderBy('sort_order','DESC');
+            ])->latest('id');
             if ($request->has('pageIndex') && $request->has('pageSize')) {
                 $pageIndex = $request->input('pageIndex');
                 $pageSize = $request->input('pageSize');
@@ -45,7 +45,7 @@ class CategoryController extends Controller
             }
 
             $roles = $query->get();
-            $totalCount = Category::where(['is_active'=>1])->count();
+            $totalCount = Category::count();
 
             return ApiResponse::success($roles,$totalCount, 'Resource fetched successfully.');
 
@@ -95,12 +95,6 @@ class CategoryController extends Controller
             return ApiResponse::error(500,  $e->getMessage(),'Something went wrong!');
         }
     }
-
-
-
-
-
-
 
 
     public function update(Request $request)

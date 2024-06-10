@@ -4,9 +4,12 @@
 use App\Http\Controllers\CacheController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CommonController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DbVersionController;
 use App\Http\Controllers\FcmTokenController;
+use App\Http\Controllers\InterestController;
+use App\Http\Controllers\MovieRequestController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SecMenuItemController;
@@ -14,6 +17,7 @@ use App\Http\Controllers\SecRolePermissionController;
 use App\Http\Controllers\SecUserAccessTblController;
 use App\Http\Controllers\SubCategoryController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WebSeriesController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RegistrationController;
@@ -166,6 +170,40 @@ Route::middleware(['idle.time','custom.auth'])->group(function () {
 
     });
 
+    // Web Series
+    Route::prefix('web-series')->group(function () {
+        Route::get('/get', [WebSeriesController::class, 'getWebSeriesList']);
+        Route::get('/get-all', [WebSeriesController::class, 'getWebSeriesDropdown']);
+
+        Route::get('/show', [WebSeriesController::class, 'show']);
+        Route::post('/store', [WebSeriesController::class, 'store']);
+        Route::patch('/update', [WebSeriesController::class, 'update']);
+
+    });
+
+
+    // Interest List
+    Route::prefix('interest')->group(function () {
+        Route::get('/get', [InterestController::class, 'getInterestList']);
+        Route::get('/get-all', [InterestController::class, 'getInterestDropdown']);
+
+        Route::get('/show', [InterestController::class, 'show']);
+        Route::post('/store', [InterestController::class, 'store']);
+        Route::patch('/update', [InterestController::class, 'update']);
+
+    });
+
+    // Contact List
+    Route::prefix('contacts')->group(function () {
+        Route::get('/get', [ContactController::class, 'getContactList']);
+
+    });
+
+    // Movie Request
+    Route::prefix('movies')->group(function () {
+        Route::get('/request/get', [MovieRequestController::class, 'getMovieRequestList']);
+
+    });
 
     Route::get('/fetch-data/{key}', [CacheController::class, 'fetchData']);
 });
