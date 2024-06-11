@@ -11,4 +11,9 @@ class MovieRequest extends Model
 
     protected $table = 'movie_request';
 
+    public function user(){
+        return $this->belongsTo(Subscriber::class,'user_id','id');
+    }
+
+
 }

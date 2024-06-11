@@ -12,7 +12,12 @@ class MovieRequestController extends Controller
     {
         try {
 
-            $query = MovieRequest::select('*')->latest('id');
+            $query = MovieRequest::select('*')
+                ->with(['user' => function ($query) {
+                    $query->select('id', 'user_name');
+                }])
+                ->latest('id');
+
             if ($request->has('pageIndex') && $request->has('pageSize')) {
                 $pageIndex = $request->input('pageIndex');
                 $pageSize = $request->input('pageSize');
