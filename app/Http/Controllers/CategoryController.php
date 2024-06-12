@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Helpers\Logger;
 use App\Http\Helpers\ApiResponse;
 use App\Models\Category;
+use App\Models\Content;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -121,9 +122,12 @@ class CategoryController extends Controller
                     'updated_by' => Auth::guard('sanctum')->user()->id,
                 ]);
 
-                if ($category){
-                    Logger::createLog( $request->category_name,'update','Category',$request->all(),$oldData);
+                if ($category) {
+                    $contentIds = Content::where('category_id', $id)->pluck('id');
+                    Content::whereIn('id', $contentIds)->update(['category_name' => $request->category_name]);
+                    Logger::createLog($request->category_name, 'update', 'Category', $request->all(), $oldData);
                 }
+
 
 
 

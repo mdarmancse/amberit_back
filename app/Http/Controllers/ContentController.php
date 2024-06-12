@@ -9,8 +9,10 @@ use App\Http\Resources\FeaturedContentResource;
 use App\Models\Category;
 use App\Models\Content;
 use App\Models\FeaturedContent;
+use App\Models\Interest;
 use App\Models\SubCategory;
 use App\Models\Tag;
+use App\Models\WebSeries;
 use Carbon\Carbon;
 use Google\Cloud\Storage\StorageClient;
 use Illuminate\Auth\Events\Registered;
@@ -118,7 +120,8 @@ class ContentController extends Controller
             $data=[
                 "categories"=>Category::select('id as value','category_name as label')->with('subCategories')->orderBy('id','DESC')->where('is_active',1)->get(),
                 "subCategories"=>SubCategory::select('id as value','category_id','sub_category_name as label')->orderBy('id','DESC')->where('is_active',1)->get(),
-                "tags"=>Tag::select('id as value','name as label')->orderBy('id','DESC')->get(),
+                "interests"=>Interest::select('id as value','interest_name as label')->orderBy('id','DESC')->get(),
+                "webSeries"=>WebSeries::select('id as value','series_name as label')->orderBy('id','DESC')->get(),
                 "orientations"=>[
                     ["label" => 'Undefined', "value" => 0],
                     ["label" => 'Vertical', "value" => 1],
@@ -141,11 +144,8 @@ class ContentController extends Controller
                 'id',
                 'content_name',
                 'category_name',
-                'transcoding_start_time',
-                'transcoding_end_time',
-                'is_approved',
+                'content_identity',
                 'is_active',
-                'is_transcoded',
                 'is_premium',
                 'created_at',
                 'updated_at',
@@ -173,12 +173,9 @@ class ContentController extends Controller
                 'id',
                 'content_name',
                 'category_name',
-                'content_file_name',
-                'transcoding_start_time',
-                'transcoding_end_time',
-                'is_approved',
+                'content_identity',
+                'is_tv_series',
                 'is_active',
-                'is_transcoded',
                 'is_premium',
                 'created_at',
                 'updated_at',
@@ -240,7 +237,6 @@ class ContentController extends Controller
         try {
             $tags=[];
             $content_tags =" ";
-            $cdnGmcConfig =[];
             $tagIds =[];
             $request->validate([
                 'content_name' => 'required|string',
@@ -250,14 +246,14 @@ class ContentController extends Controller
 
             ]);
 
-            if ($request->tags){
-                $tags = $request->tags;
-                $content_tags = implode(" | ", array_column($tags, 'label'));
+            if ($request->genre){
+                $tags = $request->genre;
+                $content_tags = implode(",", array_column($tags, 'label'));
                 $tagIds = array_column($tags, 'value');
 
                 foreach ($tags as $tag) {
                     if (is_string($tag['value'])) {
-                        $newTag = Tag::create(['name' => $tag['label'], 'status' => 1]);
+                        $newTag = Interest::create(['interest_name' => $tag['label'], 'status' => 1]);
                         $tagIds[] = $newTag->id;
                     } else {
                         $tagIds[] = $tag['value'];
@@ -277,81 +273,57 @@ class ContentController extends Controller
                 return ApiResponse::error(400, 'Content not created! Please select a category');
             }
 
-            if (!$request->hasFile('content_file_name') && !$request->content_type == 'VOD') {
-                return ApiResponse::error(400, 'Content not created! Please upload a video file');
-            }
 
 
-$content_file_name=trim($request->content_file_name)?? '';
-            if ($request->is_cdn_active){
-                $cdnGmcConfig=[
-                    'isActive'=>1,
-                    'cdnName'=>$request->cdnName,
-                    'keyName'=>$request->keyName,
-                    'mediaUrl'=>$request->mediaUrl,
-                    'privateKey'=>$request->privateKey,
-                    'expireTimeInHours'=>$request->expireTimeInHours,
-                    'signingType'=>'SIGNED_COOKIE',
-                ];
-            }
             $content = Content::create([
                 'content_name' => $request->content_name,
                 'content_description' => base64_encode($request->content_description),
                 'content_type' => $request->content_type,
-                'feature_banner' => $request->feature_banner,
-                'mobile_logo' => $request->mobile_logo,
-                'mobile_thumbnail' => $request->mobile_thumbnail,
-                'web_logo' => $request->web_logo,
-                'web_thumbnail' => $request->web_thumbnail,
-                'stb_logo' => $request->stb_logo,
-                'stb_thumbnail' => $request->stb_thumbnail,
-                'duration' => $request->duration,
-                'is_active' => $request->is_active??0,
-                'is_approved' => 1,
-                'is_ad_active' => 1,
+                'content_identity' => $request->content_identity,
+                'is_trailer_available' => $request->is_trailer_available??0,
+                'trailer_uri' => $request->trailer_uri,
+                'quality' => $request->quality,
+                'rating' => $request->rating,
+                'genre' => $content_tags??'',
                 'category_id' => $request->category_id,
                 'category_name' => $request->category_name,
-                'sub_category_id' => $request->sub_category_id??0,
-                'sub_category_name' => $request->sub_category_name??'',
-                'orientation' => $request->orientation ?? '',
-                'is_horizontal' => $request->orientation,
-                'cdn_gmc_conf' =>$request->is_cdn_active === true?$cdnGmcConfig:null,
-                'content_expire_time' => '2040-01-01 00:00:01',
-                'content_publish_time' => $request->content_publish_time??now(),
+                'subcategory_id' => $request->sub_category_id??0,
+                'subcategory_name' => $request->sub_category_name??'',
+                'release_year' => $request->release_year,
+                'release_date' => $request->release_date,
+                'language' => $request->language,
+                'poster' => $request->poster,
+                'backdrops_Poster' => $request->backdrops_Poster,
+                'home_page_link' => $request->home_page_link,
+                'runtime' => $request->runtime,
+                'actors' => $request->actors,
+                'size' => $request->size,
+                'file_location' => $request->file_location,
+                'last_air_date' => $request->last_air_date,
+                'keywords' => $request->keywords,
+                'is_tv_series' => $request->is_tv_series??0,
+                'tv_series_id' => $request->tv_series_id,
+                'tv_series_name' => $request->tv_series_name,
+                'season_number' => $request->season_number,
+                'episode_number' => $request->episode_number,
+                'episode_identity' => $request->episode_identity,
+                'overview' => $request->overview,
+                'is_active' => $request->is_active??0,
+                'is_adult' => $request->is_adult??0,
                 'is_premium' => $request->is_premium??0,
-                'content_file_name' => $content_file_name,
-                'bucket_content_name' => $content_file_name,
-                'content_drm_dash_url' => $request->content_drm_dash_url??'',
-                'content_drm_hls_url' => $request->content_drm_hls_url??'',
-                'content_owner_id' => 1,
-                'content_owner_name' => 'T Sports',
-                'is_drm_active' => $request->is_drm_active??0,
-                'tags' => $content_tags??' ',
                 'created_by' => Auth::guard('sanctum')->user()->id
             ]);
 
-            $lastid = $content->id;
-            $content_dir = md5($lastid . Carbon::now());
-            $content->content_dir = $content_dir;
-            $content->share_url = md5($lastid . Carbon::now() . rand(10, 100));
-
-            if (empty($request->content_aes_128_hls_url) || $request->content_aes_128_hls_url == null) {
-                $content->content_aes_128_hls_url = 'https://vod.tsports.com/' . $content_dir . '/manifest.m3u8';
-            } else {
-                $content->content_aes_128_hls_url = $request->content_aes_128_hls_url;
-            }
 
             $content->save();
 
-            Content::where('id', $content->id)
-                ->update(['is_horizontal' => $content->orientation, 'bucket_content_name' => $content->content_file_name]);
 
             if ($content){
                 Logger::createLog( $content->content_name,'create','Content',$request->all());
             }
 
             //return $tagIds;
-            $content->tags()->sync($tagIds);
+           // $content->interest()->sync($tagIds);
             DB::commit();
           // event(new Registered($content));
 
@@ -430,61 +402,63 @@ $content_file_name=trim($request->content_file_name)?? '';
 
             $content = Content::findOrFail($id);
             // Update tags if provided
-            if (!empty($request->tags)) {
-                $tags = $request->tags;
-                $content_tags = implode(" | ", array_column($tags, 'label'));
+            if (!empty($request->genre)) {
+                $tags = $request->genre;
+                $content_tags = implode(",", array_column($tags, 'label'));
           ;
             }
             $oldData = $content->getAttributes();
-            if ($request->is_cdn_active){
-                $cdnGmcConfig=[
-                    'isActive'=>1,
-                    'cdnName'=>$request->cdnName??null,
-                    'keyName'=>$request->keyName??null,
-                    'mediaUrl'=>$request->mediaUrl??null,
-                    'privateKey'=>$request->privateKey??null,
-                    'expireTimeInHours'=>$request->expireTimeInHours??null,
-                    'signingType'=>'SIGNED_COOKIE',
-                ];
-            }
+
 
             // Update content attributes based on the request
             $content->update([
                 'content_name' => $request->content_name,
                 'content_description' => base64_encode($request->content_description),
                 'content_type' => $request->content_type,
-                'feature_banner' => $request->feature_banner,
-                'mobile_logo' => $request->mobile_logo,
-                'mobile_thumbnail' => $request->mobile_thumbnail,
-                'web_logo' => $request->web_logo,
-                'web_thumbnail' => $request->web_thumbnail,
-                'stb_logo' => $request->stb_logo,
-                'stb_thumbnail' => $request->stb_thumbnail,
+                'content_identity' => $request->content_identity,
+                'is_trailer_available' => $request->is_trailer_available??0,
+                'trailer_uri' => $request->trailer_uri,
+                'quality' => $request->quality,
+                'rating' => $request->rating,
+                'genre' => $content_tags??'',
                 'category_id' => $request->category_id,
                 'category_name' => $request->category_name,
-                'sub_category_id' => $request->sub_category_id?? 0,
-                'sub_category_name' => $request->sub_category_name??'',
-                'orientation' => $request->orientation ?? '',
-                'is_premium' => $request->is_premium ?? 0,
-                'is_active' => $request->is_active ?? 0,
-                'content_file_name' => $request->content_file_name ?? '',
-                'duration' => $request->duration,
-                'cdn_gmc_conf' =>$request->is_cdn_active ?$cdnGmcConfig:null,
-                'content_drm_dash_url' => $request->content_drm_dash_url?? '',
-                'content_drm_hls_url' => $request->content_drm_hls_url ?? '',
-                'tags' => $content_tags?? ' ',
-                'bucket_content_name' => $request->content_file_name?? '',
-                'is_horizontal' => $request->orientation?? '',
-                'is_drm_active' => $request->is_drm_active?? 0,
+                'subcategory_id' => $request->sub_category_id??0,
+                'subcategory_name' => $request->sub_category_name??'',
+                'release_year' => $request->release_year,
+                'release_date' => $request->release_date,
+                'language' => $request->language,
+                'poster' => $request->poster,
+                'backdrops_Poster' => $request->backdrops_Poster,
+                'home_page_link' => $request->home_page_link,
+                'runtime' => $request->runtime,
+                'actors' => $request->actors,
+                'size' => $request->size,
+                'file_location' => $request->file_location,
+                'last_air_date' => $request->last_air_date,
+                'keywords' => $request->keywords,
+                'is_tv_series' => $request->is_tv_series??0,
+                'tv_series_id' => $request->tv_series_id,
+                'tv_series_name' => $request->tv_series_name,
+                'season_number' => $request->season_number,
+                'episode_number' => $request->episode_number,
+                'episode_identity' => $request->episode_identity,
+                'overview' => $request->overview,
+                'is_active' => $request->is_active??0,
+                'is_adult' => $request->is_adult??0,
+                'is_premium' => $request->is_premium??0,
+                'updated_by' => Auth::guard('sanctum')->user()->id
             ]);
 
-            if (!empty($request->tags)) {
-                $tagids = array_column($request->tags, 'value');
-                if (is_int($tagids)){
-                    $content->tags()->sync($tagids);
 
-                }
-            }
+
+//            if (!empty($request->tags)) {
+//                $tagids = array_column($request->genre, 'value');
+//                if (is_int($tagids)){
+//                    $content->tags()->sync($tagids);
+//
+//                }
+//            }
             if ($content){
                 Logger::createLog( $content->content_name,'update','Content',$request->all(),$oldData);
             }

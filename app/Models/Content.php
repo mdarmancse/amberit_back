@@ -4,66 +4,52 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use OwenIt\Auditing\Contracts\Auditable;
 
-class Content extends Model implements Auditable
+
+class Content extends Model
 {
     use HasFactory;
-    use \OwenIt\Auditing\Auditable;
+//    use \OwenIt\Auditing\Auditable;
 
+    protected $table="content_draft";
 
     protected $fillable = [
-            'content_name', 'content_description', 'content_type', 'is_active',
-            'is_approved',
-            'is_ad_active',
-            'feature_banner',
-            'mobile_logo',
-            'mobile_thumbnail',
-            'web_logo',
-            'web_thumbnail',
-            'stb_logo',
-            'stb_thumbnail',
-            'share_url',
-            'is_trailer_available',
-            'trailer_url',
-            'url_type',
-            'content_expire_time',
-            'content_publish_time',
-            'is_premium',
-            'is_purchased',
-            'price',
-            'content_size_in_mb',
-            'is_deleted',
-            'deleted_date_time',
-            'is_transcoded',
-            'transcoding_start_time',
-            'transcoding_end_time',
-            'allowed_region',
-            'allowed_county',
-            'duration',
-            'tags',
-            'orientation',
-            'age_restriction',
-            'share_count',
-            'view_count',
-            'category_id',
-            'category_name',
-            'sub_category_id',
-            'sub_category_name',
-            'content_owner_id',
-            'content_owner_name',
-            'content_owner_logo',
-            'is_drm_active',
-            'content_dir',
-            'content_file_name',
-            'content_aes_128_hls_url',
-            'content_drm_dash_url' ,
-            'content_drm_hls_url',
-            'cdn_gmc_conf',
-            'cdn_gotipath_conf',
-            'cdn_nddc_conf',
-            'created_by', 
-            'updated_by'
+        'content_name',
+        'content_description',
+        'content_type',
+        'content_identity',
+        'is_trailer_available',
+        'trailer_uri',
+        'quality',
+        'rating',
+        'genre',
+        'category_id',
+        'category_name',
+        'subcategory_id',
+        'subcategory_name',
+        'release_year',
+        'release_date',
+        'language',
+        'backdrops_Poster',
+        'poster',
+        'home_page_link',
+        'runtime',
+        'actors',
+        'size',
+        'file_location',
+        'last_air_date',
+        'keywords',
+        'is_tv_series',
+        'tv_series_name',
+        'season_number',
+        'episode_number',
+        'episode_identity',
+        'overview',
+        'is_active',
+        'is_adult',
+        'is_premium',
+        'created_by',
+        'updated_by'
             ];
 
     /**
@@ -71,63 +57,13 @@ class Content extends Model implements Auditable
      *
      * @var array
      */
-    protected $auditInclude = [
-             'content_name', 
-             'content_description', 
-             'content_type', 
-             'is_active',
-            'is_approved',
-            'is_ad_active',
-            'feature_banner',
-            'mobile_logo',
-            'mobile_thumbnail',
-            'web_logo',
-            'web_thumbnail',
-            'stb_logo',
-            'stb_thumbnail',
-            'share_url',
-            'is_trailer_available',
-            'trailer_url',
-            'url_type',
-            'content_expire_time',
-            'content_publish_time',
-            'is_premium',
-            'is_purchased',
-            'price',
-            'content_size_in_mb',
-            'is_deleted',
-            'deleted_date_time',
-            'is_transcoded',
-            'transcoding_start_time',
-            'transcoding_end_time',
-            'allowed_region',
-            'allowed_county',
-            'duration',
-            'tags',
-            'orientation',
-            'age_restriction',
-            'share_count',
-            'view_count',
-            'category_id',
-            'category_name',
-            'sub_category_id',
-            'sub_category_name',
-            'content_owner_id',
-            'content_owner_name',
-            'content_owner_logo',
-            'is_drm_active',
-            'content_dir',
-            'content_file_name',
-            'content_aes_128_hls_url',
-            'content_drm_dash_url' ,
-            'content_drm_hls_url',
-            'cdn_gmc_conf',
-            'cdn_gotipath_conf',
-            'cdn_nddc_conf',
-    ];
 
     public function tags(){
 
         return $this->belongsToMany(Tag::class);
+    }
+    public function interest(){
+
+        return $this->belongsToMany(Interest::class);
     }
 }

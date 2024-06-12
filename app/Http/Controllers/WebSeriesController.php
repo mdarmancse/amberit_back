@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Helpers\ApiResponse;
 use App\Http\Helpers\Logger;
+use App\Models\Content;
 use App\Models\WebSeries;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -111,6 +112,8 @@ class WebSeriesController extends Controller
                 ]);
 
                 if ($result){
+                    $contentIds = Content::where('tv_series_id', $id)->pluck('id');
+                    Content::whereIn('id', $contentIds)->update(['tv_series_name' => $request->tv_series_name]);
                     Logger::createLog( $request->series_name,'update','WebSeries',$request->all(),$oldData);
                 }
 

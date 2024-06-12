@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Helpers\ApiResponse;
 use App\Http\Helpers\Logger;
 use App\Models\Category;
+use App\Models\Content;
 use App\Models\SubCategory;
 use Illuminate\Http\Request;
 
@@ -129,6 +130,8 @@ class SubCategoryController extends Controller
                 ]);
 
                 if ($subCategory){
+                    $contentIds = Content::where('subcategory_id', $id)->pluck('id');
+                    Content::whereIn('id', $contentIds)->update(['subcategory_name' => $request->sub_category_name]);
                     Logger::createLog( $request->sub_category_name,'update','SubCategory',$request->all(),$oldData);
                 }
 
