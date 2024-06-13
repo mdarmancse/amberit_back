@@ -14,33 +14,7 @@ use Illuminate\Validation\Rules;
 use Illuminate\Auth\Events\Registered;
 class UserController extends Controller
 {
-//    public function getUsersList()
-//    {
-//        try {
-//            $users = User::whereHas('roles', function ($query) {
-//                $query->where('role_id', '!=', '1');
-//            })->get()->map(function ($user) {
-//                return [
-//                    'id' => $user->id,
-//                    'name' => $user->name,
-//                    'email' => $user->email,
-//                    'created_at' => $user->created_at,
-//                    'updated_at' => $user->updated_at,
-//                    'email_verified_at' => $user->email_verified_at,
-//                ];
-//            });
-//
-//
-//            return ApiResponse::success($users, null, 'User list fetched successfully');
-//
-//        }catch (\Throwable $e){
-//            return ApiResponse::error(500, 'Internal Server Error', $e->getMessage());
-//
-//        }
-//
-//
-//
-//    }
+
 
     public function getUsersListDropdown(Request $request)
     {
@@ -67,6 +41,18 @@ class UserController extends Controller
                 'updated_at',
             ])->orderBy('id','DESC');
 
+
+            if ($request->has('query') ) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('id', $keyword);
+                    $query->orWhere('name', 'like', "%{$keyword}%");
+                    $query->orWhere('email', 'like', "%{$keyword}%");
+                    $query->orWhere('phone', 'like', "%{$keyword}%");
+                });
+
+            }
+
             if ($request->has('pageIndex') && $request->has('pageSize')) {
                 $pageIndex = $request->input('pageIndex');
                 $pageSize = $request->input('pageSize');
@@ -74,7 +60,15 @@ class UserController extends Controller
             }
 
             $users = $query->get();
-            $totalCount = User::count();
+            $totalCount = User::when($request->has('query'), function ($query) use ($request) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('id', $keyword);
+                    $query->orWhere('name', 'like', "%{$keyword}%");
+                    $query->orWhere('email', 'like', "%{$keyword}%");
+                    $query->orWhere('phone', 'like', "%{$keyword}%");
+                });
+            })->count();
 
             return ApiResponse::success($users,$totalCount, 'Resource fetched successfully.');
 

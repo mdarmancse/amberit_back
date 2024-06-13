@@ -151,6 +151,13 @@ class ContentController extends Controller
                 'updated_at',
             ])->where(['content_type'=> 'LIVE'])->orderBy('id','DESC');
 
+            if ($request->has('query') ) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('id', $keyword);
+                    $query->orWhere('content_name', 'like', "%{$keyword}%");
+                });
+            }
             if ($request->has('pageIndex') && $request->has('pageSize')) {
                 $pageIndex = $request->input('pageIndex');
                 $pageSize = $request->input('pageSize');
@@ -158,7 +165,14 @@ class ContentController extends Controller
             }
 
             $contents = $query->get();
-            $totalCount = Content::where(['content_type'=> 'LIVE'])->count();
+            $totalCount = Content::where(['content_type'=> 'LIVE'])
+                ->when($request->has('query'), function ($query) use ($request) {
+                    $keyword = $request->input('query');
+                    $query->where(function ($query) use ($keyword) {
+                        $query->orWhere('id', $keyword);
+                        $query->orWhere('content_name', 'like', "%{$keyword}%");
+                    });
+                })->count();
 
             return ApiResponse::success($contents,$totalCount, 'Resource fetched successfully.');
 
@@ -181,6 +195,14 @@ class ContentController extends Controller
                 'updated_at',
             ])->where(['content_type'=> 'VOD'])->orderBy('id','DESC');
 
+            if ($request->has('query') ) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('id', $keyword);
+                    $query->orWhere('content_name', 'like', "%{$keyword}%");
+                });
+            }
+
             if ($request->has('pageIndex') && $request->has('pageSize')) {
                 $pageIndex = $request->input('pageIndex');
                 $pageSize = $request->input('pageSize');
@@ -188,7 +210,14 @@ class ContentController extends Controller
             }
 
             $contents = $query->get();
-            $totalCount = Content::where(['content_type'=> 'VOD'])->count();
+            $totalCount = Content::where(['content_type' => 'VOD'])
+                ->when($request->has('query'), function ($query) use ($request) {
+                    $keyword = $request->input('query');
+                    $query->where(function ($query) use ($keyword) {
+                        $query->orWhere('id', $keyword);
+                        $query->orWhere('content_name', 'like', "%{$keyword}%");
+                    });
+                })->count();
 
             return ApiResponse::success($contents,$totalCount, 'Resource fetched successfully.');
 
@@ -212,6 +241,14 @@ class ContentController extends Controller
                 'created_at',
                 'updated_at',
             ])->orderBy('id','DESC');
+            if ($request->has('query') ) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('id', $keyword);
+                    $query->orWhere('content_name', 'like', "%{$keyword}%");
+                });
+
+            }
             if ($request->has('pageIndex') && $request->has('pageSize')) {
                 $pageIndex = $request->input('pageIndex');
                 $pageSize = $request->input('pageSize');
@@ -221,7 +258,13 @@ class ContentController extends Controller
             $contents = $query->get();
            // $query = FeaturedContentResource::collection(FeaturedContent::orderBy('id','DESC'))->get();
 
-            $totalCount = FeaturedContent::count();
+            $totalCount = FeaturedContent::when($request->has('query'), function ($query) use ($request) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('id', $keyword);
+                    $query->orWhere('content_name', 'like', "%{$keyword}%");
+                });
+            })->count();
             return ApiResponse::success($contents, $totalCount,'Contents fetched successfully.');
 
         } catch (\Exception $e) {

@@ -14,6 +14,17 @@ class ContactController extends Controller
         try {
 
             $query = Contact::select('*')->latest('id');
+            if ($request->has('query') ) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('id', $keyword);
+                    $query->orWhere('user_id', 'like', "%{$keyword}%");
+                    $query->orWhere('username', 'like', "%{$keyword}%");
+                    $query->orWhere('mobile_number', 'like', "%{$keyword}%");
+                    $query->orWhere('subject', 'like', "%{$keyword}%");
+                });
+
+            }
             if ($request->has('pageIndex') && $request->has('pageSize')) {
                 $pageIndex = $request->input('pageIndex');
                 $pageSize = $request->input('pageSize');
@@ -21,7 +32,16 @@ class ContactController extends Controller
             }
 
             $roles = $query->get();
-            $totalCount = Contact::count();
+            $totalCount = Contact::when($request->has('query'), function ($query) use ($request) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('id', $keyword);
+                    $query->orWhere('user_id', 'like', "%{$keyword}%");
+                    $query->orWhere('username', 'like', "%{$keyword}%");
+                    $query->orWhere('mobile_number', 'like', "%{$keyword}%");
+                    $query->orWhere('subject', 'like', "%{$keyword}%");
+                });
+            })->count();
 
             return ApiResponse::success($roles,$totalCount, 'Resource fetched successfully.');
 

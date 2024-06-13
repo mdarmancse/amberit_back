@@ -39,6 +39,16 @@ class CategoryController extends Controller
                 'created_at',
                 'updated_at',
             ])->latest('id');
+
+            if ($request->has('query') ) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('id', $keyword);
+                    $query->orWhere('category_name', 'like', "%{$keyword}%");
+                });
+
+            }
+
             if ($request->has('pageIndex') && $request->has('pageSize')) {
                 $pageIndex = $request->input('pageIndex');
                 $pageSize = $request->input('pageSize');
@@ -46,7 +56,13 @@ class CategoryController extends Controller
             }
 
             $roles = $query->get();
-            $totalCount = Category::count();
+            $totalCount = Category::when($request->has('query'), function ($query) use ($request) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('id', $keyword);
+                    $query->orWhere('category_name', 'like', "%{$keyword}%");
+                });
+            })->count();
 
             return ApiResponse::success($roles,$totalCount, 'Resource fetched successfully.');
 
@@ -54,6 +70,7 @@ class CategoryController extends Controller
             return ApiResponse::error(500,  $e->getMessage(),'Something went wrong!');
         }
     }
+
 
     public function store(Request $request)
     {

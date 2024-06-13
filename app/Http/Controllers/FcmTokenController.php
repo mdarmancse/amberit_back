@@ -31,6 +31,14 @@ class FcmTokenController extends Controller
         try {
             $query = FcmNotification::select('*')->orderBy('id','desc');
 
+            if ($request->has('query') ) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('id', $keyword);
+                    $query->orWhere('notification_title', 'like', "%{$keyword}%");
+                });
+
+            }
             if ($request->has('pageIndex') && $request->has('pageSize')) {
                 $pageIndex = $request->input('pageIndex');
                 $pageSize = $request->input('pageSize');
@@ -38,7 +46,13 @@ class FcmTokenController extends Controller
             }
 
             $contents = $query->get();
-            $totalCount = FcmNotification::count();
+            $totalCount = FcmNotification::when($request->has('query'), function ($query) use ($request) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('id', $keyword);
+                    $query->orWhere('notification_title', 'like', "%{$keyword}%");
+                });
+            })->count();
 
             return ApiResponse::success($contents,$totalCount, 'Resource fetched successfully.');
 

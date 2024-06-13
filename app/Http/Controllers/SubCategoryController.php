@@ -28,6 +28,16 @@ class SubCategoryController extends Controller
                 ->leftJoin('category', 'category_sub.category_id', '=', 'category.id')
                 ->orderBy('category_sub.sort_order', 'DESC');
 
+            if ($request->has('query') ) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('category_sub.id', $keyword);
+                    $query->orWhere('category_sub.sub_category_name', 'like', "%{$keyword}%");
+                    $query->orWhere('category.category_name', 'like', "%{$keyword}%");
+                });
+
+            }
+
             if ($request->has('pageIndex') && $request->has('pageSize')) {
                 $pageIndex = $request->input('pageIndex');
                 $pageSize = $request->input('pageSize');
@@ -35,7 +45,15 @@ class SubCategoryController extends Controller
             }
 
             $subCategories = $query->get();
-            $totalCount = SubCategory::where(['is_active'=>1])->count();
+            $totalCount = SubCategory::select('category_sub.id')->leftJoin('category', 'category_sub.category_id', '=', 'category.id')
+                ->when($request->has('query'), function ($query) use ($request) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('category_sub.id', $keyword);
+                    $query->orWhere('category_sub.sub_category_name', 'like', "%{$keyword}%");
+                    $query->orWhere('category.category_name', 'like', "%{$keyword}%");
+                });
+            })->count();
 
             return ApiResponse::success($subCategories, $totalCount, 'Resource fetched successfully.');
 

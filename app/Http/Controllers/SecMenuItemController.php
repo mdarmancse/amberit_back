@@ -47,8 +47,23 @@ class SecMenuItemController extends Controller
                 $query->skip(($pageIndex - 1) * $pageSize)->take($pageSize);
             }
 
+            if ($request->has('query') ) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('menu_id', $keyword);
+                    $query->orWhere('menu_title', 'like', "%{$keyword}%");
+                });
+
+            }
+
             $menuItems = $query->get();
-            $totalCount = SecMenuItem::count();
+            $totalCount = SecMenuItem::when($request->has('query'), function ($query) use ($request) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('menu_id', $keyword);
+                    $query->orWhere('menu_title', 'like', "%{$keyword}%");
+                });
+            })->count();
 
 
             return ApiResponse::success($menuItems, $totalCount, 'Menu items retrieved successfully.');

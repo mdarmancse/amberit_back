@@ -34,8 +34,22 @@ class InterestController extends Controller
                 $query->skip(($pageIndex - 1) * $pageSize)->take($pageSize);
             }
 
+            if ($request->has('query') ) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('id', $keyword);
+                    $query->orWhere('interest_name', 'like', "%{$keyword}%");
+                });
+
+            }
             $roles = $query->get();
-            $totalCount = Interest::count();
+            $totalCount = Interest::when($request->has('query'), function ($query) use ($request) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('id', $keyword);
+                    $query->orWhere('interest_name', 'like', "%{$keyword}%");
+                });
+            })->count();
 
             return ApiResponse::success($roles,$totalCount, 'Resource fetched successfully.');
 

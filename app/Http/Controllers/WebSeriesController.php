@@ -28,6 +28,15 @@ class WebSeriesController extends Controller
         try {
 
             $query = WebSeries::select('*')->latest('id');
+
+            if ($request->has('query') ) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('id', $keyword);
+                    $query->orWhere('series_name', 'like', "%{$keyword}%");
+                });
+
+            }
             if ($request->has('pageIndex') && $request->has('pageSize')) {
                 $pageIndex = $request->input('pageIndex');
                 $pageSize = $request->input('pageSize');
@@ -35,7 +44,13 @@ class WebSeriesController extends Controller
             }
 
             $roles = $query->get();
-            $totalCount = WebSeries::count();
+            $totalCount = WebSeries::when($request->has('query'), function ($query) use ($request) {
+                $keyword = $request->input('query');
+                $query->where(function ($query) use ($keyword) {
+                    $query->orWhere('id', $keyword);
+                    $query->orWhere('series_name', 'like', "%{$keyword}%");
+                });
+            })->count();
 
             return ApiResponse::success($roles,$totalCount, 'Resource fetched successfully.');
 
