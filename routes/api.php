@@ -15,6 +15,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SecMenuItemController;
 use App\Http\Controllers\SecRolePermissionController;
 use App\Http\Controllers\SecUserAccessTblController;
+use App\Http\Controllers\SettingController;
 use App\Http\Controllers\SubCategoryController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebSeriesController;
@@ -204,6 +205,16 @@ Route::middleware(['idle.time','custom.auth'])->group(function () {
         Route::get('/request/get', [MovieRequestController::class, 'getMovieRequestList']);
 
     });
+
+    // Settings
+    Route::prefix('settings')->group(function () {
+        Route::get('/get', [SettingController::class, 'getSettingList']);
+        Route::get('/show', [SettingController::class, 'show']);
+        Route::post('/store', [SettingController::class, 'store']);
+        Route::patch('/update', [SettingController::class, 'update']);
+
+    });
+
 
     Route::get('/fetch-data/{key}', [CacheController::class, 'fetchData']);
 });

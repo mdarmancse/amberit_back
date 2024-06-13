@@ -113,7 +113,7 @@ class WebSeriesController extends Controller
 
                 if ($result){
                     $contentIds = Content::where('tv_series_id', $id)->pluck('id');
-                    Content::whereIn('id', $contentIds)->update(['tv_series_name' => $request->tv_series_name]);
+                    Content::whereIn('id', $contentIds)->update(['tv_series_name' => $request->series_name]);
                     Logger::createLog( $request->series_name,'update','WebSeries',$request->all(),$oldData);
                 }
 
